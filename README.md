@@ -2,39 +2,45 @@
 
 Automagically deploy [i2pd](http://i2pd.website/) with some common hidden services
 
-Following those instructions you can turn almost any server into i2pd node with 
-pre-configured hidden servces.
+Following those instructions you can turn almost any server into I2P node with 
+pre-configured hidden services.
+
+## Requirements
+
+You will need to have a **root shell** on your server with **SSH key authentication** set up. 
 
 Supported server OSes:
 
-- Ubuntu 16.04 LTS (or newer)
-- Debian 9 
-- CentOS 7
-- Fedora 27
+- Ubuntu 16.04 LTS and newer
+- Fedora 27 and newer
+- Debian 9 (not tested, but should work)
+- CentOS 7 (with caveats)
 - probably more in future...
 
-You need to have a root shell on your server with SSH key authentication set up. 
-
-On your personal computer (not server!), Ansible automation software is required:
+On your personal computer (not server!), [Ansible](https://ansible.com/) IT automation software is required:
 
     sudo apt install ansible
+
+## Setup
 
 Clone the repo on your personal computer (not server!):
 
     git clone https://github.com/l-n-s/super-i2p-server.git && cd super-i2p-server
 
 Copy sample inventory file and replace `dummy.server.host.name` in it with 
-hostname (or IP address) of your server.
+hostname or IP address of your server.
 
     cp inventory.ini.sample inventory.ini
     vi inventory.ini
 
+## Usage
+
 Now everything is ready, you can choose which services you would like to have. Available services:
 
-- outproxy: Personal I2P proxy to use regular Internet
-- ircd: IRC chat server (ngircd)
-- ircbouncer: [ZNC](https://znc.in/) bouncer for better experience with IRC
-- xmpp: Decentralized instant messaging server
+- **outproxy**: Personal I2P proxy to use regular Internet -- [tinyproxy](https://tinyproxy.github.io/)
+- **ircd**: anonymous IRC chat server -- [ngircd](https://github.com/ngircd/ngircd)
+- **ircbouncer**: [ZNC](https://znc.in/) bouncer for better experience with IRC
+- **xmpp**: Decentralized instant messaging server  -- [prosody](https://prosody.im) with [mod\_darknet](https://github.com/majestrate/mod_darknet)
 
 If you want everything, just run:
 
@@ -58,7 +64,7 @@ you can try to install services without i2pd (on your own risk):
 
     ansible-playbook -i inventory.ini --tags="ircd,ircbouncer" --skip-tags="i2pd" playbook.yml
     
-Keep in mind, that you may have as many servers in your inventory file as you wish, ansible will deploy *Super I2P server* on each one of them:
+Keep in mind, that you may have as many servers in your inventory file as you wish, Ansible will deploy *Super I2P server* on each one of them:
 
     [all]
     host.name
