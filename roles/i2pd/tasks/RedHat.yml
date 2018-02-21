@@ -1,0 +1,63 @@
+---
+# Tasks for CentOS/Fedora
+
+- name: Setup ntp package (RHEL)
+  package: name=ntp state=present
+
+- name: Enable ntpd service (RHEL)
+  service: name=ntpd state=started enabled=yes
+
+- name: Enable i2pd COPR repo (CentOS)
+  yum_repository:
+      name: i2pd-epel
+      description: Copr repo for i2pd owned by supervillain
+      baseurl: https://copr-be.cloud.fedoraproject.org/results/supervillain/i2pd/epel-7-$basearch/
+      skip_if_unavailable: True
+      gpgcheck: 1
+      gpgkey: https://copr-be.cloud.fedoraproject.org/results/supervillain/i2pd/pubkey.gpg
+      repo_gpgcheck: 0
+      enabled: 1
+  when: ansible_distribution == "CentOS"
+
+- name: Enable i2pd COPR repo (Fedora)
+  yum_repository:
+      name: i2pd
+      description: Copr repo for i2pd owned by supervillain
+      baseurl: https://copr-be.cloud.fedoraproject.org/results/supervillain/i2pd/fedora-$releasever-$basearch/
+      skip_if_unavailable: True
+      gpgcheck: 1
+      gpgkey: https://copr-be.cloud.fedoraproject.org/results/supervillain/i2pd/pubkey.gpg
+      repo_gpgcheck: 0
+      enabled: 1
+  when: ansible_distribution == "Fedora"
+
+- name: Setup i2pd package
+  package: name=i2pd state=present
+
+- name: Enable i2pd service
+  service: name=i2pd state=started enabled=yes
+
+- name: Get i2pd port number
+  command: |
+    {{ ansible_python.executable }} -c "with open('/var/lib/i2pd/router.info','rb') as v:f=v.read();bp=f.rfind(b'\x70\x6f\x72\x74')+6;ep=f.find(b'\x3b',bp);print(int(f[bp:ep]));"
+  register: i2pd_port
+
+- name: Open TCP firewall port
+  firewalld:
+      port: "{{ i2pd_port.stdout }}/tcp"
+      permanent: true
+      state: enabled
+  
+- name: Open UDP firewall port
+  firewalld:
+      port: "{{ i2pd_port.stdout }}/udp"
+      permanent: true
+      state: enabled
+  
+- name: Reboot the server to start i2pd in CentOS
+  shell: sleep 3s && shutdown -r now
+  async: 1
+  poll: 0
+  ignore_errors: True
+  when: ansible_distribution == "CentOS"
+

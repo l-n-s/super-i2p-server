@@ -1,0 +1,8 @@
+---
+- name: Get I2P services info from remote host
+  fetch: 
+    src: /tmp/i2pd_services.txt
+    dest: results/{{ inventory_hostname }}.txt
+    flat: yes
+  ignore_errors: True
+

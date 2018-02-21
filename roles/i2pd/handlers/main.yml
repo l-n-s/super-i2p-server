@@ -1,0 +1,8 @@
+---
+
+- name: Restart i2pd
+  service: name=i2pd state=restarted
+
+- name: Reload i2pd
+  service: name=i2pd state=reloaded
+

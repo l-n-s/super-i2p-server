@@ -1,0 +1,44 @@
+---
+- name: Load a variable file based on the OS type
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
+    - default.yml
+
+- name: Install ngircd
+  package: pkg=ngircd state=present
+
+- name: Enable ngircd service
+  service: name=ngircd enabled=yes
+
+- name: Generate random webirc password
+  shell: openssl rand -base64 12
+  register: webirc_pass
+  ignore_errors: True
+
+- name: Create ngircd configuration file 
+  template: src=ngircd.conf.j2 dest={{ ngircd_config_path }}
+
+- name: Restart ngircd
+  service: name=ngircd state=restarted
+
+- name: Insert/update ngircd tunnel for i2pd
+  blockinfile:
+    path: /etc/i2pd/tunnels.conf
+    create: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK for ircd"
+    block: |
+      [ircd]
+      type=irc
+      host=127.0.0.1
+      port=6667
+      keys=ircd.dat
+      webircpassword={{ webirc_pass.stdout }}
+
+- name: Apply i2pd config and collect b32 destination
+  include_role:
+    name: i2pd
+    tasks_from: apply_and_collect_b32
+  vars:
+    service: ircd

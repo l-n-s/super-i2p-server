@@ -1,0 +1,66 @@
+---
+- name: Load a variable file based on the OS type
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
+    - default.yml
+
+- name: Install Prosody and dependencies
+  package: pkg={{ item }} state=present
+  with_items:
+    - prosody
+    - lua-bit32
+
+- name: Enable prosody service
+  service: name=prosody enabled=yes
+
+- name: Insert/update prosody tunnels for i2pd
+  blockinfile:
+    path: /etc/i2pd/tunnels.conf
+    create: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK for prosody"
+    block: |
+      [prosody-c2s]
+      type=server
+      host=127.0.0.1
+      port=5222
+      inport=5222
+      keys=prosody.dat
+
+      [prosody-s2s]
+      type=server
+      host=127.0.0.1
+      port=5269
+      inport=5269
+      keys=prosody.dat
+
+- name: Apply i2pd config and collect b32 destination
+  include_role:
+    name: i2pd
+    tasks_from: apply_and_collect_b32
+  vars:
+    service: xmpp
+
+- name: Configure Prosody
+  template: src=prosody.cfg.lua.j2 dest=/etc/prosody/prosody.cfg.lua group=root owner=prosody
+
+- name: Add mod_darknet plugin
+  copy: src=mod_darknet.lua dest={{ prosody_modules_path }}/mod_darknet.lua
+
+- name: Restart prosody
+  service: name=prosody state=restarted
+
+- name: Generate random xmpp password
+  shell: openssl rand -base64 12
+  register: xmpp_pass
+  ignore_errors: True
+  changed_when: False
+
+- name: Create Prosody accounts
+  command: prosodyctl register admin {{ b32_dest.stdout }} "{{ xmpp_pass.stdout }}"
+
+- name: Record xmpp username/password
+  shell: "echo '# xmpp username / password: admin@{{ b32_dest.stdout }} / {{ xmpp_pass.stdout }}' >> /tmp/i2pd_services.txt"
+  ignore_errors: True
+

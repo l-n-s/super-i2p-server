@@ -1,0 +1,8 @@
+[all]
+;; Replace dummy hostname with your own
+dummy.server.host.name
+
+;; Uncomment next lines if server is Ubuntu 16.04 or newer
+;[all:vars]
+;ansible_python_interpreter=/usr/bin/python3
+

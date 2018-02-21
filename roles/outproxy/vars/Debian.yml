@@ -1,0 +1,5 @@
+---
+tinyproxy_user: nobody
+tinyproxy_group: nogroup
+tinyproxy_config_path: /etc/tinyproxy.conf
+tinyproxy_filter_path: /etc/tinyproxy.filter

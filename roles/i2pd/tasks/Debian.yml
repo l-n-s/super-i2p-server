@@ -1,0 +1,31 @@
+---
+# Tasks for Debian/Ubuntu
+# TODO apparmor
+
+- name: Setup ntp package
+  apt: name=ntp state=present
+
+- name: Enable ntpd service 
+  service: name=ntp state=started enabled=yes
+
+- name: Setup missing package(s) for Debian
+  apt: name=dirmngr state=present
+  when: ansible_distribution == "Debian"
+
+- name: Enable Ubuntu PPA
+  apt_repository: repo='ppa:purplei2p/i2pd'
+  when: ansible_distribution == "Ubuntu"
+
+- name: Enable Debian repository
+  apt_repository:
+    repo: "deb http://repo.lngserv.ru/debian {{ ansible_distribution_release }} main"
+    state: present
+    filename: 'i2pd'
+  when: ansible_distribution == "Debian"
+
+- name: Setup i2pd package
+  apt: name=i2pd state=present
+
+- name: Enable i2pd service
+  service: name=i2pd state=started enabled=yes
+

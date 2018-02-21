@@ -1,0 +1,10 @@
+---
+# This role deploys i2pd in a secure manner
+
+- name: Load tasks based on the OS type
+  include_tasks: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
+    - default.yml
+

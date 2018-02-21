@@ -1,0 +1,44 @@
+---
+- name: Load a variable file based on the OS type
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
+    - default.yml
+
+- name: Install tinyproxy
+  package: pkg=tinyproxy state=latest
+
+- name: Enable tinyproxy service
+  service: name=tinyproxy enabled=yes
+
+- name: Create tinyproxy configuration file 
+  template: src=tinyproxy.conf.j2 dest={{ tinyproxy_config_path }}
+
+- name: Create tinyproxy filter file 
+  template: src=filter.j2 dest={{ tinyproxy_filter_path }}
+
+- name: Restart tinyproxy
+  service: name=tinyproxy state=restarted
+
+- name: Insert/update tinyproxy tunnel for i2pd
+  blockinfile:
+    path: /etc/i2pd/tunnels.conf
+    create: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK for tinyproxy"
+    block: |
+      [outproxy]
+      type=server
+      host=127.0.0.1
+      port=8888
+      keys=outproxy.dat
+      signaturetype=7
+      inbound.length=1
+      outbound.length=1
+
+- name: Apply i2pd config and collect b32 destination
+  include_role:
+    name: i2pd
+    tasks_from: apply_and_collect_b32
+  vars:
+    service: outproxy

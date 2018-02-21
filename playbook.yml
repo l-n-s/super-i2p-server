@@ -1,0 +1,16 @@
+---
+- hosts: all
+  roles:
+    - common
+    - i2pd
+    - outproxy
+    - ircd
+    - ircbouncer
+    - xmpp
+  tasks:
+    - name: Get i2pd services info 
+      include_role:
+        name: i2pd
+        tasks_from: get_info
+      tags: [always, get_info]
+

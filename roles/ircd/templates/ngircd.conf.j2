@@ -1,0 +1,89 @@
+# config template
+[Global]
+	Name = irc.example.net
+	AdminInfo1 = Anonymous
+	AdminInfo2 = Anonymous
+	AdminEMail = anonymous@example.com
+	Info = Yet another IRC Server running in I2P
+	Listen = 127.0.0.1
+	;MotdFile = /etc/ngircd/ngircd.motd
+	MotdPhrase = "Patrolling the Mojave almost makes you wish for a nuclear winter"
+	;Network = aIRCnetwork
+	;Password = wealllikedebian
+	PidFile = /var/run/ngircd/ngircd.pid
+	Ports = 6667
+	ServerGID = {{ ngircd_group }}
+	ServerUID = {{ ngircd_user }}
+
+[Limits]
+	ConnectRetry = 60
+	;IdleTimeout = 0
+	MaxConnections = 0
+	MaxConnectionsIP = 0
+	MaxJoins = 0
+	;MaxNickLength = 9
+	;MaxListSize = 100
+	PingTimeout = 120
+	PongTimeout = 20
+
+[Options]
+	;AllowedChannelTypes = #&+
+	;AllowRemoteOper = no
+	;ChrootDir = /var/empty
+	;CloakHost = cloaked.host
+	;CloakHostModeX = cloaked.user
+	;CloakHostSalt = abcdefghijklmnopqrstuvwxyz
+	;CloakUserToNick = yes
+	;ConnectIPv6 = yes
+	;ConnectIPv4 = yes
+	DefaultUserModes = +iw
+	;DNS = yes
+	;Ident = yes
+	;IncludeDir = /etc/ngircd/conf.d
+	MorePrivacy = yes
+	;NoticeAuth = no
+	OperCanUseMode = yes
+	;OperChanPAutoOp = yes
+	;OperServerMode = no
+	PAM = no
+	;PAMIsOptional = no
+	;RequireAuthPing = no
+	;ScrubCTCP = no
+	SyslogFacility = local1
+	WebircPassword = {{ webirc_pass.stdout }}
+
+[SSL]
+	;CertFile = /etc/ssl/certs/server.crt
+	;CipherList = HIGH:!aNULL:@STRENGTH:!SSLv3
+	CipherList = SECURE128:-VERS-SSL3.0
+	;DHFile = /etc/ngircd/dhparams.pem
+	;KeyFile = /etc/ssl/private/server.key
+	;KeyFilePassword = secret
+	;Ports = 6697, 9999
+
+[Operator]
+	;Name = TheOper
+	;Password = ThePwd
+	;Mask = *!ident@somewhere.example.com
+
+[Server]
+	;Name = irc2.example.net
+	;Host = connect-to-host.example.net
+	;Bind = 10.0.0.1
+	;Port = 6667
+	;MyPassword = MySecret
+	;PeerPassword = PeerSecret
+	;Group = 123
+	;Passive = no
+	;SSLConnect = yes
+	;ServiceMask = *Serv,Global
+
+[Channel]
+	;Name = #ngircd
+	;Topic = Our ngircd testing channel
+	;Modes = tnk
+	;Key = Secret
+	;KeyFile = /etc/ngircd/#chan.key
+	;MaxUsers = 23
+
+# -eof-

@@ -1,0 +1,4 @@
+---
+ngircd_user: ngircd
+ngircd_group: ngircd
+ngircd_config_path: /etc/ngircd.conf

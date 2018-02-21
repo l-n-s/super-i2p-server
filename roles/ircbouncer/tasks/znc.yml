@@ -1,0 +1,73 @@
+---
+# Based on https://github.com/sovereign/sovereign
+# more or less as per http://wiki.znc.in/Running_ZNC_as_a_system_daemon
+
+- name: Install znc
+  package: pkg=znc state=installed
+
+- name: Create znc group
+  group: name=znc state=present
+
+- name: Create znc user
+  user: name=znc state=present home=/usr/lib/znc system=yes group=znc shell=/usr/sbin/nologin
+
+- name: Ensure pid directory exists
+  file: state=directory path=/var/run/znc group=znc owner=znc
+
+- name: Ensure configuration folders exist
+  file: state=directory path=/usr/lib/znc/{{ item }} group=znc owner=znc
+  with_items:
+    - moddata
+    - modules
+    - users
+
+- name: Copy znc service file into place
+  copy: src=znc.service dest=/etc/systemd/system/znc.service mode=0644
+
+- name: Create znc config directory
+  file: state=directory path=/usr/lib/znc/configs group=znc owner=znc
+
+- name: Generate random znc password
+  shell: openssl rand -base64 12
+  register: znc_pass
+  ignore_errors: True
+  changed_when: False
+
+- name: Generate znc password hash
+  shell: |
+      {{ ansible_python.executable }} -c 'import hashlib, os; znc_salt = hashlib.md5(os.urandom(16)).hexdigest()[:20]; znc_hash_m = hashlib.sha256("{}{}".format("{{ znc_pass.stdout }}", znc_salt).encode()).hexdigest(); print("sha256#{}#{}#".format(znc_hash_m, znc_salt))'
+  register: znc_password_hash
+  ignore_errors: True
+  changed_when: False
+
+- name: Copy znc configuration file into place
+  template: src=znc.conf.j2 dest=/usr/lib/znc/configs/znc.conf owner=znc group=znc
+  notify: restart znc
+
+- name: Ensure znc is a system service
+  service: name=znc state=restarted enabled=true
+
+- name: Record znc username/password
+  shell: "echo '# znc username / password: admin / {{znc_pass.stdout}}' >> /tmp/i2pd_services.txt"
+  ignore_errors: True
+
+- name: Insert/update znc tunnel for i2pd
+  blockinfile:
+    path: /etc/i2pd/tunnels.conf
+    create: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK for znc"
+    block: |
+      [znc]
+      type=server
+      host=127.0.0.1
+      port=6685
+      inport=6685
+      gzip=false
+      keys=znc.dat
+
+- name: Apply i2pd config and collect b32 destination
+  include_role:
+    name: i2pd
+    tasks_from: apply_and_collect_b32
+  vars:
+    service: znc
