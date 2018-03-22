@@ -45,6 +45,22 @@
 - name: Configure Prosody
   template: src=prosody.cfg.lua.j2 dest=/etc/prosody/prosody.cfg.lua group=root owner=prosody
 
+- name: Ensure certs directory exists
+  file: path=/etc/prosody/certs state=directory owner=root group=prosody mode=0750
+
+- name: Create SSL config
+  template: src=openssl.cnf dest=/etc/prosody/certs/{{ b32_dest.stdout }}.cnf group=root owner=prosody
+
+- name: Generate key
+  shell: umask 0077 && openssl genrsa -out /etc/prosody/certs/{{ b32_dest.stdout }}.key 2048
+
+- name: Generate crt
+  shell: openssl req -new -x509 -key /etc/prosody/certs/{{ b32_dest.stdout }}.key -days 3650 -sha256 -utf8 -config /etc/prosody/certs/{{ b32_dest.stdout }}.cnf -out /etc/prosody/certs/{{ b32_dest.stdout }}.crt
+
+- name: Correct file permissions 
+  file: path=/etc/prosody/certs/{{ b32_dest.stdout }}.{{ item }} mode=640 owner=root group=prosody
+  with_items: [ "key", "crt" ]
+
 - name: Add mod_darknet plugin
   copy: src=mod_darknet.lua dest={{ prosody_modules_path }}/mod_darknet.lua
 

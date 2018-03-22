@@ -1,0 +1,58 @@
+oid_section = new_oids
+
+[ new_oids ]
+
+# RFC 6120 section 13.7.1.4. defines this OID
+xmppAddr = 1.3.6.1.5.5.7.8.5
+
+# RFC 4985 defines this OID
+SRVName  = 1.3.6.1.5.5.7.8.7
+
+[ req ]
+
+default_bits       = 4096
+default_keyfile    = {{ b32_dest.stdout }}.key
+distinguished_name = distinguished_name
+req_extensions     = certrequest
+x509_extensions    = selfsigned
+
+# ask about the DN?
+prompt = no
+
+[ distinguished_name ]
+
+commonName             = {{ b32_dest.stdout }}
+countryName            = GB
+localityName           = The Internet
+organizationName       = Your Organisation
+organizationalUnitName = XMPP Department
+emailAddress           = xmpp@{{ b32_dest.stdout }}
+
+[ certrequest ]
+
+# for certificate requests (req_extensions)
+
+basicConstraints = CA:FALSE
+keyUsage         = digitalSignature,keyEncipherment
+extendedKeyUsage = serverAuth,clientAuth
+subjectAltName   = @subject_alternative_name
+
+[ selfsigned ]
+
+# and self-signed certificates (x509_extensions)
+
+basicConstraints = CA:TRUE
+subjectAltName = @subject_alternative_name
+
+[ subject_alternative_name ]
+
+# See http://tools.ietf.org/html/rfc6120#section-13.7.1.2 for more info.
+
+DNS.0       =                                           {{ b32_dest.stdout }}
+otherName.0 =                 xmppAddr;FORMAT:UTF8,UTF8:{{ b32_dest.stdout }}
+otherName.1 =            SRVName;IA5STRING:_xmpp-client.{{ b32_dest.stdout }}
+otherName.2 =            SRVName;IA5STRING:_xmpp-server.{{ b32_dest.stdout }}
+
+DNS.1       =                                conference.{{ b32_dest.stdout }}
+otherName.3 =      xmppAddr;FORMAT:UTF8,UTF8:conference.{{ b32_dest.stdout }}
+otherName.4 = SRVName;IA5STRING:_xmpp-server.conference.{{ b32_dest.stdout }}
