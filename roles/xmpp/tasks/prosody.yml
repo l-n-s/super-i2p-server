@@ -45,9 +45,6 @@
 - name: Configure Prosody
   template: src=prosody.cfg.lua.j2 dest=/etc/prosody/prosody.cfg.lua group=root owner=prosody
 
-- name: Ensure certs directory exists
-  file: path=/etc/prosody/certs state=directory owner=root group=prosody mode=0750
-
 - name: Create SSL config
   template: src=openssl.cnf dest=/etc/prosody/certs/{{ b32_dest.stdout }}.cnf group=root owner=prosody
 
